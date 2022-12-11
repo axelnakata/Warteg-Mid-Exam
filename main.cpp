@@ -5,9 +5,128 @@
 #include <time.h>
 #include <ctype.h>
 
+// Linked list to store all dish
+struct Node{ // Double linked list
+    char namaMenu[50];
+    int harga;
+    int stok;
+    Node *next, *prev;
+};
+
+Node *head, *tail; //Head Menu and Tail Menu
+
+Node *createNode(char namaMenu[], int harga, int stok){ // Function to create newNode - newMenu
+    Node *newNode = (Node *)malloc(sizeof(Node));
+
+    strcpy(newNode->namaMenu, namaMenu);
+    newNode -> harga = harga;
+    newNode -> stok = stok;
+    newNode -> next = NULL;
+    newNode -> prev = NULL;
+
+    return newNode;
+}
+
+void readNode(Node *currentNode, int counter){ // Function coordinate with printMenu()
+    printf("%.2d. ", counter);
+    printf("%-15s     ", currentNode -> namaMenu);
+    printf("%.3d       ", currentNode -> stok);
+    printf("Rp%d", currentNode -> harga);
+}
+
+void printMenu(){ // Function to print all menu in Linked List
+    int counter = 1;
+    for(Node *temp = head; temp != NULL; temp = temp -> next){
+        readNode(temp, counter);
+        counter++;
+        puts("");
+    }
+}
+
+// Function to run "1. Add Dish"
+void addDish(char namaMenu[], int harga, int stok){ //Function to add dish (pushHead - Algorithm)
+    Node *temp = createNode(namaMenu, harga, stok);
+    if(!head){ // if there's no head - empty data
+        head = tail = temp;
+    }
+    else{
+        temp -> next = head;
+        head -> prev = temp;
+        head = temp;
+    }
+}
+
+// Function to run "2. Remove Dish"
+void popTail(){ // Function to remove last Menu (popTail - Algorithm)
+    if(!head){ // if there's no node in LL
+        return;
+    }
+    else if(head == tail){ // if there's only 1 node
+        free(head);
+        head = tail = NULL;
+    }
+    else{ // if there's more than 1 node, we need a new tail candidate
+        Node *newTail = tail -> prev;
+        tail->prev = newTail -> next = NULL;
+        free(tail);
+        tail = newTail;
+    }
+}
+
+void popHead(){ // Function to remove first Menu (popHead - Algorithm)
+    if(!head){ // if there's no node in LL
+        return;
+    }
+    else if(head == tail){ // if there's only 1 node
+        free(head); 
+        head = tail = NULL; 
+    }
+    else{ // if there's more than 1 node, we need a new head candidate
+        Node *newHead = head -> next;
+        head -> next = newHead -> prev = NULL;
+        free(head);
+        head = newHead;
+    }
+}
+
+int removeDish(char namaMenu[]){ // Function to remove dish (popMid - Algorithm)
+    if(!head){ // if there's no node in LL
+        return 0; // do nothing
+    }
+    else if(strcmp(head->namaMenu, namaMenu) == 0){ // if removed dish is in first position (head),
+        popHead(); //use popHead() function
+        return 1;
+    }
+    else if(strcmp(tail->namaMenu, namaMenu) == 0){ //if removed dish is in last position (tail),
+        popTail(); // use popTail() function
+        return 1;
+    }
+    else{ // if query is in the middle of the LL
+
+        Node *current = head; //start from beggining (head)
+        while(current && strcmp(current->namaMenu, namaMenu) != 0){ //check if current node name == target removed name
+            if(current == tail){ // if removed dish not found until last menu,
+                return 0; // return 0
+            }
+            current = current -> next;
+        }
+
+
+        current->prev->next = current -> next; 
+        current->next->prev = current -> prev;
+        current->prev = current->next = NULL;
+        free(current);
+        current = NULL;
+        return 1;
+    }
+
+    // return 0 - dish not found / doesn't exist
+    // return 1 - dish is removed succesfully
+}
 
 
 int main(){
+    while(true){
     // print user's operating system
     struct utsname system;
     uname(&system);
@@ -37,7 +156,7 @@ int main(){
 
     switch(menu){
         case 1:{
-            char namaMenu[50] = {0};
+            char namaMenu[20] = {0};
             int hargaMenu;
             int stokMenu;
 
@@ -79,10 +198,52 @@ int main(){
                     validStockMenu = false;
                 }
             }while(!validStockMenu);
-        }
 
-        puts("The dish has been added!");
-        puts("Press enter to continue...");
+            addDish(namaMenu, hargaMenu, stokMenu);
+            // printMenu();
+
+            puts("The dish has been added!");
+            puts("Press enter to continue...");
+            getchar();
+            getchar();
+            break;
+        }
+        case 2:{
+            int headline = 30;
+            char namaResto[20] = "Bude's Menu";
+            printf ("%*s\n", (int)(headline/2 + strlen(namaResto)/2), namaResto);
+            printf("==============================\n");
+            printf("No.      Name         Quantity     Price  \n");
+            if(head == NULL){
+                printf("\nNo dish is available.\n\n");
+                printf("==============================\n");
+            }
+            else{
+                printMenu();
+                printf("==============================\n");
+                printf("Insert dish's name to be deleted: ");
+                char targetDish[20] = {0};
+                scanf("%[^\n]", targetDish);
+                getchar();
+
+                int check = removeDish(targetDish);
+
+                if(check == 1){ //true(1) - dish is removed
+                    puts("The dish has been removed!");
+                }
+                else{ // false(0) - dish not found
+                    puts("Invalid input, dish not found!");
+                }
+            }
+            puts("Press enter to continue...");
+            getchar();
+            break;
+        }
+        case 8:{
+            exit(0);
+        }
+        
+    }
     }
 
 
