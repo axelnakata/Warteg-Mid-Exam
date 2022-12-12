@@ -5,6 +5,8 @@
 #include <time.h>
 #include <ctype.h>
 
+#define clear() printf("\033[H\033[J") // function to clear screen (transition)
+
 // Linked list to store all dish
 struct Node{ // Double linked list
     char namaMenu[50];
@@ -111,7 +113,6 @@ int removeDish(char namaMenu[]){ // Function to remove dish (popMid - Algorithm)
             current = current -> next;
         }
 
-
         current->prev->next = current -> next; 
         current->next->prev = current -> prev;
         current->prev = current->next = NULL;
@@ -122,6 +123,25 @@ int removeDish(char namaMenu[]){ // Function to remove dish (popMid - Algorithm)
 
     // return 0 - dish not found / doesn't exist
     // return 1 - dish is removed succesfully
+}
+
+int checkDuplicateMenu(char namaMenu[]){ // function to check if the menu is unique or not in the linked list
+    if(!head){
+        return 1;
+    }
+    else{
+        Node *current = head; //start from beggining (head)
+        while(current){ //check if there is still element
+            if(strcmp(current->namaMenu, namaMenu) == 0){ // if dish wanted to add is a duplicate
+                return 0; // return 0
+            }
+            current = current -> next;
+        }
+        return 1;
+    }
+
+    // return 0 - dish is duplicate
+    // return 1 - dish is unique
 }
 
 
@@ -152,7 +172,7 @@ int main(){
         scanf("%d", &menu);
         getchar();
     }while(menu < 1 || menu > 8);
-
+    clear();
 
     switch(menu){
         case 1:{
@@ -167,11 +187,17 @@ int main(){
                 scanf("%[^\n]", namaMenu);
                 getchar();
                 validNamaMenu = true;
-                for(int i = 0; i < strlen(namaMenu); i++){
-                    if(isupper(namaMenu[i])){
+                for(int i = 0; i < strlen(namaMenu); i++){ 
+                    if(isupper(namaMenu[i])){ // validation to check lower case letter
                         validNamaMenu = false;
                         break;
                     }
+                    else if(!isalpha(namaMenu[i]) && !isspace(namaMenu[i])){ // validation to check only alphabet and space
+                        validNamaMenu = false;
+                        break;
+                    }
+
+                    validNamaMenu = checkDuplicateMenu(namaMenu); //check if menu is unique
                 }
             }while(!validNamaMenu);
 
@@ -182,7 +208,7 @@ int main(){
                 scanf("%d", &hargaMenu);
                 ValidHargaMenu = true;
 
-                if(hargaMenu < 1000 || hargaMenu > 50000){
+                if(hargaMenu < 1000 || hargaMenu > 50000){ // validation to check price
                     ValidHargaMenu = false;
                 }
             }while(!ValidHargaMenu);
@@ -194,7 +220,7 @@ int main(){
                 scanf("%d", &stokMenu);
                 validStockMenu = true;
 
-                if(stokMenu < 1 || stokMenu > 999){
+                if(stokMenu < 1 || stokMenu > 999){ // validation to check stock number
                     validStockMenu = false;
                 }
             }while(!validStockMenu);
@@ -206,6 +232,7 @@ int main(){
             puts("Press enter to continue...");
             getchar();
             getchar();
+            clear();
             break;
         }
         case 2:{
@@ -237,6 +264,7 @@ int main(){
             }
             puts("Press enter to continue...");
             getchar();
+            clear();
             break;
         }
         case 8:{
