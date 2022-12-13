@@ -1,13 +1,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <sys/utsname.h>
-#include <time.h>
 #include <ctype.h>
+#include <sys/utsname.h> // header to print system
+#include <time.h>       // header to print time
 
 #define clear() printf("\033[H\033[J") // function to clear screen (transition)
 
-// Linked list to store all dish
+// Linked list Functions to store all dish
 struct Node{ // Double linked list
     char namaMenu[50];
     int harga;
@@ -144,6 +144,94 @@ int checkDuplicateMenu(char namaMenu[]){ // function to check if the menu is uni
     // return 1 - dish is unique
 }
 
+// Hash functions to store customer's name (chaining method)
+const int MAX_BUCKETS = 7; // max elements to be stored
+struct cusNode { // Single Linked List to store names
+    char cusName[50];
+    cusNode *nextCus;
+} *cusHead[MAX_BUCKETS], *cusTail[MAX_BUCKETS];
+
+cusNode *createNodeCus(const char *name){
+    cusNode *newNode = (cusNode *)malloc(sizeof(cusNode));
+    strcpy(newNode -> cusName, name);
+    newNode -> nextCus = NULL;
+
+    return newNode;
+}
+
+unsigned long djb2(const char *str){ // hashing algorithm of DJB2 HASHING
+    unsigned long key = 5381;
+
+    for(int i = 0; i < strlen(str); i++){
+        int ascii = int(str[i]);
+        key = (key << 5) + key + ascii;
+    }
+    
+    return key % MAX_BUCKETS;
+}
+
+void insertCustomer(const char *str){ // function to insert name into hash table
+    cusNode *newNode = createNodeCus(str);
+    int index = djb2(str);
+
+    if(!cusHead[index]){ // if LL is empty at the specified index
+        cusHead[index] = cusTail[index] = newNode;
+    }
+    else{ // push tail
+        cusTail[index]->nextCus = newNode;
+        cusTail[index] = newNode;
+    }
+}
+
+void traverseHash(int i){ // function to traverse(loop) the hash table specified index
+    cusNode *curr = cusHead[i];
+    while(curr){
+        printf("%s -> ", curr->cusName);
+        curr = curr-> nextCus;
+    }
+    puts("Null");
+}
+
+void readCustomer(){ // function to print the current hashing table (to check program)
+    for(int i = 0; i < MAX_BUCKETS; i++){
+        printf("Index %d: ", i);
+        if(cusHead[i]){
+            traverseHash(i);
+        }
+        else{
+            puts("NULL");
+        }
+    }
+}
+
+int traverseSearch(int i, const char *str){ // function to traverse and compare customer's names
+    cusNode *curr = cusHead[i]->nextCus;
+    while(curr){
+        if(strcmp(curr->cusName, str) == 0){
+            return 1;
+        }
+        curr = curr-> nextCus;
+    }
+    return 0;
+}
+
+int searchCustomer(const char *str){ //function to check and compare names in the hash table
+    for(int i = 0; i < MAX_BUCKETS; i++){
+        if(!cusHead[i]){ // if index has no data (NULL)
+            continue;
+        }
+        else if(strcmp(cusHead[i]->cusName, str) == 0){ // if customer's name immediately match with the head element
+            return 1;
+        }
+        else{ // loop through the index to find any possible match name
+            if(traverseSearch(i, str)){
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
 
 int main(){
     while(true){
@@ -175,7 +263,7 @@ int main(){
     clear();
 
     switch(menu){
-        case 1:{
+        case 1:{ // 1. Add Dish
             char namaMenu[20] = {0};
             int hargaMenu;
             int stokMenu;
@@ -226,7 +314,6 @@ int main(){
             }while(!validStockMenu);
 
             addDish(namaMenu, hargaMenu, stokMenu);
-            // printMenu();
 
             puts("The dish has been added!");
             puts("Press enter to continue...");
@@ -235,7 +322,7 @@ int main(){
             clear();
             break;
         }
-        case 2:{
+        case 2:{ // 2. Remove Dish
             int headline = 30;
             char namaResto[20] = "Bude's Menu";
             printf ("%*s\n", (int)(headline/2 + strlen(namaResto)/2), namaResto);
@@ -267,7 +354,69 @@ int main(){
             clear();
             break;
         }
-        case 8:{
+        case 3:{ // 3. Add Customer
+            bool validCusName;
+            do{
+                printf("Insert the customer's name [Without space]: ");
+                char tempCusName[50] = {0};
+                scanf("%[^\n]", tempCusName);
+                getchar();
+                validCusName = true;
+
+                for(int i = 0; i < strlen(tempCusName); i++){ 
+                    if(!isalpha(tempCusName[i]) || isspace(tempCusName[i])){ // validation to check only alphabet and no space
+                        validCusName = false;
+                        break;
+                    }
+                }
+
+                if(validCusName) insertCustomer(tempCusName); // if valid, insert to hashtable
+            }while(!validCusName);
+            
+            puts("Customer has been added!");
+            puts("Press enter to continue...");
+            getchar();
+            clear();
+            break;
+        }
+        case 4:{ // 4. Search Customer
+            readCustomer(); // checking customers
+            bool validSearchCus;
+            do{
+                printf("Insert the customer's name to be searched: ");
+                char tempCheckCus[50] = {0};
+                scanf("%[^\n]", tempCheckCus);
+                getchar();
+                validSearchCus = true;
+
+                for(int i = 0; i < strlen(tempCheckCus); i++){ 
+                    if(!isalpha(tempCheckCus[i]) || isspace(tempCheckCus[i])){ // validation to check only alphabet and no space
+                        validSearchCus = false;
+                        break;
+                    }
+                }
+
+                if(validSearchCus){
+                    bool cusFound = searchCustomer(tempCheckCus); // if valid, search customer in hashtable
+                    if(cusFound){ // if target customer is found
+                        printf("%s is present.\n", tempCheckCus);
+                    }
+                    else{
+                        printf("%s is not present.\n", tempCheckCus);
+                    }
+                }
+
+            }while(!validSearchCus);
+
+            puts("Press enter to continue...");
+            getchar();
+            clear();
+            break;
+        }
+        case 8:{ // 8. Exit Warteg
+            puts("Please expand your terminal to full screen!");
+            puts("Press enter to continue...");
+            getchar();
             exit(0);
         }
         
