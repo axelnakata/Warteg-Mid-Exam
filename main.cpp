@@ -1,8 +1,19 @@
+/* NOTES - PLEASE READ:
+Code might not run if the #include <sys/utsname.h> is not compatible with the OS.
+If code fail to run, please comment the specified header and also some codes in int main()
+
+The following line of code that needs to be deleted/comment are:
+-Line 16
+-Line 569 until 571
+
+Thank you for the understanding.
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <sys/utsname.h> // header to print system
+#include <sys/utsname.h> ///PLEASE COMMENT THIS LINE, IF CODE DOESN'T RUN (header to print system)
 #include <time.h>        // header to print time
 
 #define clear() printf("\033[H\033[J") // function to clear screen (transition)
@@ -251,8 +262,7 @@ void insertOrder(const char *nama, const char *menu, int jumlah){
         }
     }
 
-    // // sudah dapat posisi customer sekarang
-    // printf("customer sekarang %s\n", curr->cusName);
+    // sudah dapat posisi customer sekarang
 
     Node *temp = head;
     while(temp){
@@ -263,8 +273,6 @@ void insertOrder(const char *nama, const char *menu, int jumlah){
     }
 
     // temp sudah di posisi data yang ingin diambil
-
-    // printf("\nMenu ditemukan, menu adalah %s\n", temp->namaMenu);
 
     Node *order = createNode(temp->namaMenu, temp->harga, jumlah);
 
@@ -284,9 +292,6 @@ void insertOrder(const char *nama, const char *menu, int jumlah){
         position->next = order;
     }
 
-    // printf("Pesanan: %s\n", curr->orderList->namaMenu);
-    // printf("Jumlah: %d\n", curr->orderList->stok);
-    // printf("Harga: %d\n", curr->orderList->harga);
 }
 
 void traverseHash(int i)
@@ -421,10 +426,71 @@ int searchCusIndex(int index, char *copy){
     return 0;
 }
 
+void popHeadCustomer(int headNow){
+    if(cusHead[headNow]==cusTail[headNow]){
+            free(cusHead[headNow]);
+            cusHead[headNow] = cusTail[headNow] = NULL;
+    }
+        else{
+            cusNode *temp = cusHead[headNow];
+            temp = temp->nextCus;
+            cusHead[headNow]->nextCus = NULL;
+            free(cusHead[headNow]);
+            cusHead[headNow] = temp;
+    }
+}
+
+void popTailCustomer(int headNow){
+    if(cusHead[headNow]==cusTail[headNow]){
+            free(cusHead[headNow]);
+            cusHead[headNow] = cusTail[headNow] = NULL;
+    }
+    else{
+        cusNode *temp = cusHead[headNow];
+
+        while(temp->nextCus != cusTail[headNow]){
+            temp = temp->nextCus;
+        }
+
+        temp->nextCus = NULL;
+        free(cusTail[headNow]);
+        cusTail[headNow] = temp;
+    }
+}
+
+void removeCustomer(cusNode *curr, int headNow){ // remove customer by pop mid algorithm
+    if(!cusHead[headNow]){ // if there is nothing
+        return ;
+    }
+    else if(strcmp(cusHead[headNow]->cusName, curr->cusName) == 0){ // if element in head(pop head)
+        popHeadCustomer(headNow);
+    }
+    else if(strcmp(cusTail[headNow]->cusName, curr->cusName) == 0){ // if element in tail (pop tail)
+        popTailCustomer(headNow);
+    }
+    else{
+        cusNode *temp = cusHead[headNow];
+
+        while(temp && strcmp(temp->nextCus->cusName, curr->cusName)!=0){
+            temp = temp->nextCus;
+        }
+        
+        cusNode *targetRemove = temp->nextCus;
+
+        temp->nextCus = targetRemove->nextCus;
+        free(targetRemove);
+        targetRemove = NULL;
+        
+    }
+}
+
 void printAllOrder(const char* name){
     cusNode *curr;
 
+
     bool isFoundCustomer = false;
+
+    int headNow;
 
     for (int i = 0; i < MAX_BUCKETS; i++)
     { // loop until find the customer's specified index in the hash table
@@ -447,6 +513,7 @@ void printAllOrder(const char* name){
 
             if (isFoundCustomer)
             {
+                headNow = i;
                 break;
             }
         }
@@ -460,13 +527,15 @@ void printAllOrder(const char* name){
 
     while(position){
         printf("[%d] %s x%d\n", counter, position->namaMenu, position->stok);
-        sumHarga += position->harga;
+        sumHarga += position->harga * position->stok;
 
         counter ++;
         position = position->next;
     }
 
     printf("Total: Rp%d\n", sumHarga);
+
+    removeCustomer(curr, headNow);
 }
 
 int validasiOrder(char namaMenu[], int stok)
@@ -482,15 +551,14 @@ int validasiOrder(char namaMenu[], int stok)
         {
             if (strcmp(current->namaMenu, namaMenu) == 0 && stok <= current->stok)
             {
-                // printf("Makanan ditemukan: %s dan stok sekarang %d\n", current->namaMenu, current->stok);
                 return 1;
             }
             current = current->next;
         }
-        // printf("MAKANAN TIDAK DITEMUKAN\n");
         return 0;
     }
 }
+
 
 
 int main()
@@ -498,9 +566,9 @@ int main()
     while (true)
     {
         // print user's operating system
-        struct utsname system;
-        uname(&system);
-        printf("System: %s\n", system.sysname);
+        struct utsname system;                    //PLEASE COMMENT THIS LINE, IF CODE DOESN'T RUN
+        uname(&system);                           //PLEASE COMMENT THIS LINE, IF CODE DOESN'T RUN
+        printf("System: %s\n", system.sysname);   //PLEASE COMMENT THIS LINE, IF CODE DOESN'T RUN
 
         // print current day, date,and time
         time_t tm;
@@ -704,8 +772,8 @@ int main()
             break;
         }
         case 5:
-        {                   // 5. View Warteg
-            readCustomer(); // checking customers
+        { // 5. View Warteg
+            // readCustomer(); // checking customers
             puts("Customer's List");
             viewWarteg();
 
@@ -767,14 +835,25 @@ int main()
                 do
                 {
                     char tempNamaMenu[20] = {0};
+                    char namaMenuFormatted[20] = {0};
                     printf("[%d] Insert the dish's name and quantity: ", i);
-                    scanf("%s x%d", tempNamaMenu, &tempJumlahOrder);
                     getchar();
 
-                    isValidOrder = validasiOrder(tempNamaMenu, tempJumlahOrder);
+                    // Format input is - [nama makanan] x2
+                    // Example = telur goreng x5
+                    scanf("%[^x]x%d", tempNamaMenu, &tempJumlahOrder);
+                    // getchar();
+
+                    for(int j = 0; j < strlen(tempNamaMenu)-1; j++){
+                        namaMenuFormatted[j] = tempNamaMenu[j];
+                    }
+
+                    printf("makanan %s, jumlah %d\n", namaMenuFormatted, tempJumlahOrder);
+
+                    isValidOrder = validasiOrder(namaMenuFormatted, tempJumlahOrder);
 
                     if(isValidOrder){
-                        strcpy(namaMenuOrder, tempNamaMenu);
+                        strcpy(namaMenuOrder, namaMenuFormatted);
                     }
                 } while(!isValidOrder);
 
@@ -782,6 +861,7 @@ int main()
 
             }
             
+            getchar();
             puts("Order success!");
             puts("Press enter to continue...");
             getchar();
