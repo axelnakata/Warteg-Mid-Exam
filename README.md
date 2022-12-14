@@ -10,8 +10,7 @@ IMPORTANT NOTES:
 If code fail to run, please comment the specified header and also some codes in int main()
 
 The following line of code that needs to be deleted/comment are:
--Line 17
--Line 612 until 614
+Line 17 and Line 612 until 614
 
 Code was tested in vsCode using WSL:Ubuntu
 Thank you for the understanding.
